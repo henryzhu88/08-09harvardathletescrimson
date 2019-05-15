@@ -1,0 +1,84 @@
+---
+title: "Harvard Student-Athlete Employment, 08-09"
+author: "Henry Zhu"
+date: "May 15, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(readxl)
+library(gt)
+```
+```{r, include=TRUE, echo=FALSE, message=FALSE}
+athletes <- read_excel("08-09 student-athletedata.xls") %>%
+  clean_names() %>%
+  select(sport, senior,category,education) %>%
+  filter(category!= "NA") 
+
+table1 <- athletes %>%
+  group_by(category) %>%
+  summarize(N=n()) %>%
+  mutate(freq=N/sum(N)) %>%
+  gt() %>%
+  tab_header(
+    title = "Current Occupation of Harvard Student-Athletes from 08-09"
+  ) %>%  
+  tab_source_note(
+    source_note = "Note: 116 Missing Values Omitted"
+  ) %>% 
+   cols_label(
+    category = "Employment Sector",
+    freq = "Frequency",
+    N = "Count"
+  ) %>%
+  fmt_percent(columns = vars(freq),
+              decimals = 1)
+table1
+
+table2<-athletes %>%
+   mutate(education = case_when(
+                           education != "NA" ~ "Obtaining/Obtained a Post-Grad Degree",
+                           TRUE ~ "No Post-Grad Degree")) %>%
+group_by(education) %>%
+  summarize(N=n()) %>%
+  mutate(freq=N/sum(N)) %>%
+  gt() %>%
+  tab_header(
+    title = "Post-Graduate Education of Harvard Student-Athletes from 08-09"
+  ) %>%  
+  tab_source_note(
+    source_note = "Note: 116 Missing Values Omitted"
+  ) %>% 
+   cols_label(
+    education = "",
+    freq = "Frequency",
+    N = "Count"
+  ) %>%
+  fmt_percent(columns = vars(freq),
+              decimals = 1)
+table2
+
+jobbar <- athletes %>%
+  group_by(category) %>%
+  summarize(N=n()) %>%
+  mutate(freq=N/sum(N)) %>%
+  ggplot(aes(x = category, y = freq*100)) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggtitle("Frequency of Employment Sector") +
+  labs(x="Category",y="Percentage")
+jobbar
+
+sportbar <-athletes %>%
+  group_by(sport,category) %>%
+  summarize(N=n()) %>%
+  mutate(freq=N/sum(N)) %>%
+  slice(which.max(freq)) 
+sportbar
+
+
+
+```
